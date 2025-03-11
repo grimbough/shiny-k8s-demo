@@ -8,6 +8,21 @@
 #
 
 library(shiny)
+library(paws.storage)
+
+download_rda <- function(project) {
+  s3_client <- paws.storage::s3(
+    credentials = list(
+      anonymous = TRUE
+    ),
+    endpoint = 'https://s3.embl.de/',
+    region = NULL)
+  
+  tf <- tempfile(fileext = '.rda')
+  object <- s3_client$get_object(Bucket = 'shiny-demo', Key = sprintf('results_%s.rda', project))
+  writeBin(object = object$Body, con = tf) 
+  load(tf, envir = .GlobalEnv)
+}
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(
@@ -27,13 +42,29 @@ ui <- fluidPage(
 
         # Show a plot of the generated distribution
         mainPanel(
-           plotOutput("distPlot")
+           plotOutput("heatmap"),
+           plotOutput("lines")
         )
     )
 )
 
 # Define server logic required to draw a histogram
-server <- function(input, output) {
+server <- function(input, output, session) {
+  
+  observe({
+    query <- parseQueryString(session$clientData$url_search)
+    if (!is.null(query[['project']])) {
+      print(query)
+      download_rda( query[['project']] )
+      print(ls())
+      output$lines <- renderPlot(
+        plot(points)
+      )
+      output$heatmap <- renderPlot(
+        image(mat)
+      )
+    }
+  })
 
     output$distPlot <- renderPlot({
         # generate bins based on input$bins from ui.R
