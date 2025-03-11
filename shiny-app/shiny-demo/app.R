@@ -10,9 +10,9 @@
 print(.libPaths())
 
 library(shiny)
-if(!requireNamespace('paws.storage', quietly = TRUE))
-  install.packages('paws.storage')
-library(paws.storage)
+# if(!requireNamespace('paws.storage', quietly = TRUE))
+#   install.packages('paws.storage')
+# library(paws.storage)
 
 download_rda <- function(project) {
   s3_client <- paws.storage::s3(
@@ -56,20 +56,20 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output, session) {
   
-  observe({
-    query <- parseQueryString(session$clientData$url_search)
-    if (!is.null(query[['project']])) {
-      print(query)
-      download_rda( query[['project']] )
-      print(ls())
-      output$lines <- renderPlot(
-        plot(points)
-      )
-      output$heatmap <- renderPlot(
-        image(mat)
-      )
-    }
-  })
+  # observe({
+  #   query <- parseQueryString(session$clientData$url_search)
+  #   if (!is.null(query[['project']])) {
+  #     print(query)
+  #     download_rda( query[['project']] )
+  #     print(ls())
+  #     output$lines <- renderPlot(
+  #       plot(points)
+  #     )
+  #     output$heatmap <- renderPlot(
+  #       image(mat)
+  #     )
+  #   }
+  # })
 
     output$distPlot <- renderPlot({
         # generate bins based on input$bins from ui.R
