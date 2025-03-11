@@ -7,7 +7,11 @@
 #    https://shiny.posit.co/
 #
 
+print(.libPaths())
+
 library(shiny)
+if(!requireNamespace('paws.storage', quietly = TRUE))
+  install.packages('paws.storage')
 library(paws.storage)
 
 download_rda <- function(project) {
@@ -29,6 +33,7 @@ ui <- fluidPage(
 
     # Application title
     titlePanel("Old Faithful Geyser Data"),
+    titlePanel(paste(.libPaths(), collapse = '\n')),
 
     # Sidebar with a slider input for number of bins 
     sidebarLayout(
