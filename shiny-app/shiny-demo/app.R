@@ -18,7 +18,7 @@ download_rda <- function(project) {
       anonymous = TRUE
     ),
     endpoint = 'https://s3.embl.de/',
-    region = NULL)
+    region = 'auto')
   
   tf <- tempfile(fileext = '.rda')
   object <- s3_client$get_object(Bucket = 'shiny-demo', Key = sprintf('results_%s.rda', project))
