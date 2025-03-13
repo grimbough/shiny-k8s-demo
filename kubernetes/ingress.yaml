@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+   traefik.ingress.kubernetes.io/router.tls.certresolver: sectigo
+  name: shiny-server
+  namespace: shiny-test-1
+spec:
+  ingressClassName: internal-users
+  rules:
+  - host: shiny-test.embl.org
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: shiny-server
+            port: 
+              name: http
+

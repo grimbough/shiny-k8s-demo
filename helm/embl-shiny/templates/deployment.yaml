@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shiny-server
+  labels:
+    app: shiny-server
+  namespace: {{ .Values.namespace }}
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: shiny-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: shiny-server
+    spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: {{ .Values.server.user }}
+        runAsGroup: {{ .Values.server.group }}
+        seccompProfile:
+          type: RuntimeDefault
+      initContainers:
+        - name: download-app
+          image: alpine/git:latest
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: 
+              - ALL
+          volumeMounts:
+            - name: shiny-app-volume
+              mountPath: "/shiny-server/"
+              readOnly: false
+          command: ['sh', '-c']
+          args:
+            - |
+              ls -l /shiny-server/
+              git clone https://github.com/grimbough/shiny-k8s-demo.git /tmp/shiny-k8s-demo
+              cp -rf /tmp/shiny-k8s-demo/shiny-app/shiny-demo/* /shiny-server/
+              ls -l /shiny-server/
+        - name: install-packages
+          image: rocker/r-ver:{{ .Values.server.tag }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: 
+              - ALL
+          volumeMounts:
+            - name: r-library-volume
+              mountPath: "/R-lib/"
+              readOnly: false
+          command: ['R', '-e', '.libPaths(); install.packages("paws.storage", lib = "/R-lib/", ask = FALSE, update = TRUE)']
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.server.image }}:{{ .Values.server.tag }}"
+          imagePullPolicy: "Always"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: 
+              - ALL
+          volumeMounts:
+            - name: shiny-app-volume
+              mountPath: "/srv/shiny-server/"
+              readOnly: true
+            - name: r-library-volume
+              mountPath: "/home/shiny/R/x86_64-pc-linux-gnu-library/{{ .Values.server.tag }}/"
+              readOnly: true
+          ports:
+            - name: http
+              containerPort: 3838
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          command: ["shiny-server"]
+      volumes:
+        - name: shiny-app-volume
+          persistentVolumeClaim:
+            claimName: app-pvc
+        - name: r-library-volume
+          persistentVolumeClaim:
+            claimName: r-library-pvc
+      restartPolicy: Always

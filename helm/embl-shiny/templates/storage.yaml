@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-pvc
+  namespace: {{ .Values.namespace }}
+spec:
+  storageClassName: "basic-csi"
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Gi
+status: {}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: r-library-pvc
+  namespace: {{ .Values.namespace }}
+spec:
+  storageClassName: "basic-csi"
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.storage.library_size }}
+status: {}
