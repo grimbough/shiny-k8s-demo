@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+library(bslib)
 if(!requireNamespace('paws.storage', quietly = TRUE))
   install.packages('paws.storage')
 library(paws.storage)
@@ -27,27 +28,19 @@ download_rda <- function(project) {
 }
 
 # Define UI for application that draws a histogram
-ui <- fluidPage(
+ui <- page_fillable(
 
     # Application title
-    titlePanel("Old Faithful Geyser Data"),
+    titlePanel("Getting data from S3"),
 
     # Sidebar with a slider input for number of bins 
-    sidebarLayout(
-        sidebarPanel(
-            sliderInput("bins",
-                        "Number of bins:",
-                        min = 1,
-                        max = 50,
-                        value = 30)
-        ),
+    card(
+      card_header("heatmap"),
+      plotOutput("heatmap")),
+    card(
+      card_header("lines"),
+      plotOutput("lines"))
 
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("heatmap"),
-           plotOutput("lines")
-        )
-    )
 )
 
 # Define server logic required to draw a histogram
@@ -68,16 +61,6 @@ server <- function(input, output, session) {
     }
   })
 
-    output$distPlot <- renderPlot({
-        # generate bins based on input$bins from ui.R
-        x    <- faithful[, 2]
-        bins <- seq(min(x), max(x), length.out = input$bins + 1)
-
-        # draw the histogram with the specified number of bins
-        hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Waiting time to next eruption (in mins)',
-             main = 'Histogram of waiting times')
-    })
 }
 
 # Run the application 
